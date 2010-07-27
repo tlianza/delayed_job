@@ -1,11 +1,8 @@
-# -*- encoding: utf-8 -*-
-begin
-  require 'jeweler'
-rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install jeweler"
-  exit 1
-end
+require "rubygems"
+require "bundler"
+Bundler.setup
 
+require 'jeweler'
 Jeweler::Tasks.new do |s|
   s.name     = "delayed_job"
   s.summary  = "Database-backed asynchronous priority queue system -- Extracted from Shopify"
@@ -21,9 +18,10 @@ Jeweler::Tasks.new do |s|
   s.test_files = Dir['spec/*_spec.rb']
   
   s.add_dependency "daemons"
-  s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec", '2.0.0.beta.19'
   s.add_development_dependency "sqlite3-ruby"
   s.add_development_dependency "activerecord"
+  s.add_development_dependency "bson_ext"
   s.add_development_dependency "mongo_mapper"
   s.add_development_dependency "dm-core"
   s.add_development_dependency "dm-observer"
@@ -33,21 +31,12 @@ Jeweler::Tasks.new do |s|
   s.add_development_dependency "couchrest"
 end
 
-require 'spec/rake/spectask'
+task :default => :spec
 
-
-task :default do
-  %w(2.3.5 3.0.0.beta3).each do |version|
-    puts "Running specs with Rails #{version}"
-    system("RAILS_VERSION=#{version} rake -s spec;")
-  end
-end
-
+require 'rspec/core/rake_task'
 desc 'Run the specs'
-Spec::Rake::SpecTask.new(:spec) do |t|
-  t.libs << 'lib'
+RSpec::Core::RakeTask.new do |t|
+  # t.libs << 'lib'
   t.pattern = 'spec/*_spec.rb'
   t.verbose = true
 end
-task :spec => :check_dependencies
-

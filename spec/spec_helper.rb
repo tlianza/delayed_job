@@ -1,10 +1,10 @@
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 
-require 'rubygems'
-require 'spec'
+require "rubygems"
+require "bundler"
+Bundler.setup
+require 'rspec'
 require 'logger'
-
-gem 'activerecord', ENV['RAILS_VERSION'] if ENV['RAILS_VERSION']
 
 require 'delayed_job'
 require 'sample_jobs'
@@ -27,5 +27,7 @@ end
 
 Delayed::Worker.backend = BACKENDS.first
 
+
 # Add this directory so the ActiveSupport autoloading works
-ActiveSupport::Dependencies.load_paths << File.dirname(__FILE__)
+require 'active_support/dependencies'
+ActiveSupport::Dependencies.autoload_paths << File.dirname(__FILE__)
