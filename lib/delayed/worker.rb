@@ -116,6 +116,12 @@ module Delayed
     end
     
     def run(job)
+      #if the job had already expired, log it as such and continue
+      if(job.expired?)
+        fail_permanently(job, "Job #{job.name} had expired before a a worker could run it")
+        return true #the job neither succeeded nor failed, it's just expired, so return false so it's not rescheduled
+      end
+      
       runtime =  Benchmark.realtime do
         Timeout.timeout(self.class.max_run_time.to_i) { job.invoke_job }
         job.destroy
@@ -137,15 +143,19 @@ module Delayed
         job.unlock
         job.save!
       else
-        say "* [JOB] PERMANENTLY removing #{job.name} because of #{job.attempts} consecutive failures.", Logger::INFO
-
-        if job.payload_object.respond_to? :on_permanent_failure
-          say "* [JOB] Running on_permanent_failure hook"
-          job.payload_object.on_permanent_failure
-        end
-
-        self.class.destroy_failed_jobs ? job.destroy : job.update_attributes(:failed_at => Delayed::Job.db_time_now)
+        fail_permanently(job, "* [JOB] PERMANENTLY removing #{job.name} because of #{job.attempts} consecutive failures.")
       end
+    end
+    
+    def fail_permanently(job, message)
+      say (message || "[JOB] PERMANENTLY removing #{job.name}"), Logger::INFO
+
+      if job.payload_object.respond_to? :on_permanent_failure
+        say "* [JOB] Running on_permanent_failure hook"
+        job.payload_object.on_permanent_failure
+      end
+
+      self.class.destroy_failed_jobs ? job.destroy : job.update_attributes(:failed_at => Delayed::Job.db_time_now)
     end
 
     def say(text, level = Logger::INFO)
