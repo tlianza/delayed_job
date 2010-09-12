@@ -73,6 +73,11 @@ module Delayed
         self.locked_by    = nil
       end
       
+      # True if this object is too old to run
+      def expired?
+        (expires_at && self.class.db_time_now > expires_at)
+      end
+         
     private
 
       def deserialize(source)
